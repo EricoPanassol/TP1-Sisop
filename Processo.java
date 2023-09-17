@@ -71,21 +71,7 @@ public class Processo implements Comparable<Processo> {
 
             } else if (insideCodeBlock) {
 
-                String[] lineRef = line.trim().split("#");
-
-                if (lineRef.length == 1) {
-                    line = lineRef[0].trim();
-                } else {
-                    if (immediateCommands.contains(lineRef[0])) {
-                        if (isNumeric(lineRef[1])) {
-                            line = lineRef[0] + " #" + lineRef[1];
-                        } else {
-                            line = lineRef[0] + " " + lineRef[1];
-                        }
-                    } else {
-                        line = lineRef[0].trim();
-                    }
-                }
+                line = getCleanLine(line);
 
                 if (line.contains(":")) {
                     String[] labelRef = line.split(":");
@@ -95,22 +81,34 @@ public class Processo implements Comparable<Processo> {
                         instructionMap.put(lineCounter, labelRef[1]);
                     } else {
                         labelsMap.put(labelRef[0], lineCounter);
-                        String instruction = myReader.nextLine().trim();
+                        String instruction = getCleanLine(myReader.nextLine().trim());
                         instructionMap.put(lineCounter, instruction);
                     }
                 } else {
                     instructionMap.put(lineCounter, line);
                 }
+                lineCounter++;
 
             } else if (insideDataBlock) {
                 String[] variable = line.trim().split(" ");
                 dataMap.put(variable[0], Integer.parseInt(variable[1]));
 
             }
-            lineCounter++;
         }
 
         myReader.close();
+    }
+
+    private String getCleanLine(String line) {
+        String[] lineRef = line.trim().split("\\s*#\\s*");
+
+        String cleanLine = lineRef[0].trim();
+
+        if (lineRef.length > 1 && immediateCommands.contains(lineRef[0])) {
+            cleanLine = lineRef[0] + " #" + lineRef[1];
+        }
+
+        return cleanLine;
     }
 
     public boolean isNumeric(String strNum) {
@@ -123,7 +121,6 @@ public class Processo implements Comparable<Processo> {
     public String readFile(File program) throws FileNotFoundException {
         StringBuilder data = new StringBuilder();
 
-        // try {
         Scanner myReader = new Scanner(program);
         while (myReader.hasNext()) {
             String line = myReader.nextLine();
@@ -133,10 +130,6 @@ public class Processo implements Comparable<Processo> {
         }
         myReader.close();
 
-        // } catch (FileNotFoundException e) {
-        // System.out.println("File not found: " + e.getMessage());
-        // // e.printStackTrace();
-        // }
         return data.toString();
     }
 
@@ -146,15 +139,18 @@ public class Processo implements Comparable<Processo> {
     // do nome do prog e o tempo que em perdeu
     public boolean exec() {
         // Executa o codigo
-        availableTime--;
-        pc++;
         System.out.println("PC: " + pc);
         System.out.println(instructionMap.get(pc));
+        System.out.println(instructionMap.get(pc).equals("syscall 0"));
 
         // Verifica se é uma instrução de IO
         this.isIo = false;
 
-        return instructionMap.get(pc).equals("syscall 0");
+        boolean hasExit = instructionMap.get(pc).equals("syscall 0");
+
+        availableTime--;
+        pc++;
+        return hasExit;
     }
 
     public void setBlockedTime() {

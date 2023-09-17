@@ -34,7 +34,7 @@ public class Edf {
 
     // Adiciona na fila de prontos os processos que chegam no tempo atual
     public void updateReadyQueue() {
-        ArrayList<Processo> processsToAdd = processMap.get(currentTime);
+        ArrayList<Processo> processsToAdd = processMap.remove(currentTime);
         if (processsToAdd != null) {
             Arrays.toString(processsToAdd.toArray());
 
@@ -71,7 +71,6 @@ public class Edf {
                 }
 
             }
-
             currentTime++;
         }
         System.out.println("Fim");
