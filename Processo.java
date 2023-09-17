@@ -139,18 +139,100 @@ public class Processo implements Comparable<Processo> {
     // do nome do prog e o tempo que em perdeu
     public boolean exec() {
         // Executa o codigo
-        System.out.println("PC: " + pc);
-        System.out.println(instructionMap.get(pc));
-        System.out.println(instructionMap.get(pc).equals("syscall 0"));
+        System.out.println("\tPC: " + pc);
+        System.out.println("\tInstrução: " + instructionMap.get(pc).toUpperCase());
+        System.out.println("\tAcc antes da execução: " + acc);
 
-        // Verifica se é uma instrução de IO
-        this.isIo = false;
+        String[] instruction = instructionMap.get(pc).toLowerCase().split("\\s+");
+        String command = instruction[0];
+        String operator = instruction[1];
 
-        boolean hasExit = instructionMap.get(pc).equals("syscall 0");
+        boolean hasHalt = false;
 
+        switch (command) {
+            case "add":
+                acc += getOp1Value(operator);
+                break;
+            case "sub":
+                acc -= getOp1Value(operator);
+                break;
+            case "mult":
+                acc *= getOp1Value(operator);
+                break;
+            case "div":
+                acc /= getOp1Value(operator);
+                break;
+            case "load":
+                acc = getOp1Value(operator);
+                break;
+            case "store":
+                dataMap.put(operator, acc);
+                break;
+            case "brany":
+                pc = labelsMap.get(operator);
+                pc--;
+                break;
+            case "brpos":
+                if (acc > 0) {
+                    pc = labelsMap.get(operator);
+                    pc--;
+                }
+                break;
+            case "brzero":
+                if (acc == 0) {
+                    pc = labelsMap.get(operator);
+                    pc--;
+                }
+                break;
+            case "brneg":
+                if (acc < 0) {
+                    pc = labelsMap.get(operator);
+                    pc--;
+                }
+                break;
+            case "syscall":
+                Integer index = Integer.parseInt(operator);
+                if (index == 0) {
+                    hasHalt = true;
+                } else {
+                    setBlockedTime();
+                    System.out.println("\t\tIo por " + blockedTime + " ciclos");
+
+                    if (index == 1) {
+                        System.out.println("\t\tPrint Acc: " + acc);
+                    } else if (index == 2) {
+                        this.isIo = true;
+                        Scanner sc = new Scanner(System.in);
+                        int t = sc.nextInt();
+                        System.out.println("==========T: " + t);
+                        this.acc = t;
+
+                        sc.nextLine();
+                        sc.close();
+                    }
+
+                }
+                break;
+            default:
+                System.err.println("Comando não reconhecido");
+                System.out.println(command);
+                System.out.println(operator);
+                System.out.println("-----");
+                break;
+        }
+
+        System.out.println("\tAcc depois da execução: " + acc);
         availableTime--;
         pc++;
-        return hasExit;
+        return hasHalt;
+    }
+
+    private int getOp1Value(String op1) {
+        if (op1.contains("#")) {
+            return Integer.parseInt(op1.split("#")[1]);
+        }
+
+        return dataMap.get(op1);
     }
 
     public void setBlockedTime() {
@@ -159,11 +241,8 @@ public class Processo implements Comparable<Processo> {
     }
 
     public void decrementBlockedTime() {
-        if (blockedTime > 0) {
-            this.blockedTime--;
-        } else {
-            this.isIo = false;
-        }
+        this.blockedTime--;
+        this.isIo = blockedTime > 0;
     }
 
     @Override

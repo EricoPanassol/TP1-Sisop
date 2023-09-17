@@ -23,6 +23,7 @@ public class App {
             } catch (FileNotFoundException e) {
                 System.out.println(e);
                 System.out.println("Erro ao ler arquivo, tente novamente.\n\n");
+                userInput.sc.nextLine();
             }
         }
 
