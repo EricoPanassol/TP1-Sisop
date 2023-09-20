@@ -139,9 +139,6 @@ public class Processo implements Comparable<Processo> {
   }
 
   // Retornad true se finalizou a execução
-  // @ToDo: caso haja perca de deadline, manda um sinal pro EDF para ele mostrar o
-  // output
-  // do nome do prog e o tempo que em perdeu
   public boolean exec() {
     // Executa o codigo
     System.out.println("\tPC: " + pc);
