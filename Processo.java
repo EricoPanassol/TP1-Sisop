@@ -81,9 +81,11 @@ public class Processo implements Comparable<Processo> {
           String[] labelRef = line.split(":");
 
           if (labelRef.length == 2) {
+            // Comando na mesma linha da label
             labelsMap.put(labelRef[0], lineCounter);
             instructionMap.put(lineCounter, labelRef[1]);
           } else {
+            // Comando esacrito na linha abaixo da label
             labelsMap.put(labelRef[0], lineCounter);
             String instruction = getCleanLine(myReader.nextLine().trim());
             instructionMap.put(lineCounter, instruction);
@@ -96,7 +98,6 @@ public class Processo implements Comparable<Processo> {
       } else if (insideDataBlock) {
         String[] variable = line.trim().split(" ");
         dataMap.put(variable[0], Integer.parseInt(variable[1]));
-
       }
     }
 
@@ -199,16 +200,15 @@ public class Processo implements Comparable<Processo> {
         if (index == 0) {
           hasHalt = true;
         } else {
+          this.isIo = true;
           setBlockedTime();
           System.out.println("\t\tIo por " + blockedTime + " ciclos");
 
           if (index == 1) {
             System.out.println("\t\tPrint Acc: " + acc);
           } else if (index == 2) {
-            this.isIo = true;
             Scanner sc = new Scanner(System.in);
             int t = sc.nextInt();
-            System.out.println("==========T: " + t);
             this.acc = t;
 
             sc.nextLine();

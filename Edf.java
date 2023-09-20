@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -37,14 +36,12 @@ public class Edf {
   public void updateReadyQueue() {
     ArrayList<Processo> processsToAdd = processMap.remove(currentTime);
     if (processsToAdd != null) {
-      Arrays.toString(processsToAdd.toArray());
-
       readyQueue.addAll(processsToAdd);
     }
   }
 
   private void validateDeadline(Processo p) {
-    p.lostDeadline = p.deadline <= currentTime;
+    p.lostDeadline = p.availableTime > 0 && p.deadline <= currentTime;
     if (p.lostDeadline) {
       System.out.println("\tProcesso " + p.name + " perdeu deadline!");
       p.deadline = p.deadline + p.deadlineAbs;
@@ -69,8 +66,6 @@ public class Edf {
   public void run() {
     while (readyQueue.size() > 0 || blockedQueue.size() > 0 || processMap.size() > 0) {
 
-      // System.out.println("--> Tempo Atual: " + currentTime);
-
       updateReadyQueue();
 
       Processo currentProcess = readyQueue.poll();
@@ -80,7 +75,6 @@ public class Edf {
 
       if (currentProcess != null) {
         System.out.println("Ciclo " + currentTime + ". Executando processo: " + currentProcess.name);
-        // System.out.println("Executando processo: " + currentProcess.name);
 
         boolean hasExit = currentProcess.exec();
 
@@ -89,6 +83,8 @@ public class Edf {
         if ((currentProcess.isIo || currentProcess.availableTime == 0) && !hasExit) {
 
           if (currentProcess.availableTime == 0) {
+            // Se o processo terminou o tempo de computação,
+            // reseta o tempo de computação e incrmenta o deadline
             currentProcess.availableTime = currentProcess.computationTime;
             currentProcess.blockedTime = currentProcess.deadline - currentTime;
             currentProcess.deadline = currentProcess.deadline + currentProcess.deadlineAbs;
@@ -96,7 +92,10 @@ public class Edf {
             System.out.println("\tProcesso completou tempo de computação!");
           }
 
+          // Adiciona na fila de bloqueados se saiu para IO ou se finalizou o tempo de
+          // computação
           blockedQueue.add(currentProcess);
+
         } else if (currentProcess.availableTime != 0 && !hasExit) {
           readyQueue.add(currentProcess);
         }
@@ -105,8 +104,6 @@ public class Edf {
         System.out.println("Ciclo " + currentTime + ". Em IDLE");
 
       }
-
-      // System.out.println("+++++ReadyQueue.size()" + readyQueue.size());
 
       System.out.println("\n");
 
