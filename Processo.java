@@ -250,7 +250,6 @@ public class Processo implements Comparable<Processo> {
 
   @Override
   public int compareTo(Processo p2) {
-    System.out.println("Comparou");
 
     if (this.lostDeadline || this.deadline < p2.deadline) {
       // This tem prioridade maior

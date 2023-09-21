@@ -35,6 +35,7 @@ public class Edf {
   // Adiciona na fila de prontos os processos que chegam no tempo atual
   public void updateReadyQueue() {
     ArrayList<Processo> processsToAdd = processMap.remove(currentTime);
+
     if (processsToAdd != null) {
       readyQueue.addAll(processsToAdd);
     }
@@ -45,6 +46,7 @@ public class Edf {
     if (p.lostDeadline) {
       System.out.println("\tProcesso " + p.name + " perdeu deadline!");
       p.deadline = p.deadline + p.deadlineAbs;
+      p.availableTime = p.computationTime;
     }
   }
 
@@ -55,7 +57,7 @@ public class Edf {
       Processo p = it.next();
       p.decrementBlockedTime();
 
-      if (p.blockedTime == 0) {
+      if (p.blockedTime <= 0) {
         validateDeadline(p);
         readyQueue.add(p);
         it.remove();
@@ -78,7 +80,9 @@ public class Edf {
 
         boolean hasExit = currentProcess.exec();
 
-        validateDeadline(currentProcess);
+        if (!hasExit) {
+          validateDeadline(currentProcess);
+        }
 
         if ((currentProcess.isIo || currentProcess.availableTime == 0) && !hasExit) {
 
@@ -92,9 +96,15 @@ public class Edf {
             System.out.println("\tProcesso completou tempo de computação!");
           }
 
-          // Adiciona na fila de bloqueados se saiu para IO ou se finalizou o tempo de
-          // computação
-          blockedQueue.add(currentProcess);
+          if (currentProcess.blockedTime > 0) {
+            // Adiciona na fila de bloqueados se saiu para IO ou se finalizou o tempo de
+            // computação
+            blockedQueue.add(currentProcess);
+          } else {
+            // Se terminou o tempo de computação junto com o deadline adiciona na fila de
+            // prontos para o próximo periodo
+            readyQueue.add(currentProcess);
+          }
 
         } else if (currentProcess.availableTime != 0 && !hasExit) {
           readyQueue.add(currentProcess);
